@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Research Image Labeler</title>
+<style>
+:root{--navy:#14213d;--blue:#347fe8;--bg:#eef2f7;--ink:#202939;--muted:#667085;--line:#d9e0e9;--card:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial}
+header{background:var(--navy);color:white;padding:15px 22px 0;position:sticky;top:0;z-index:4;box-shadow:0 2px 8px #0c173022}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.brand{font-size:18px;font-weight:750}.sub{color:#bdc9dd;font-size:12px}.meta{display:flex;gap:9px;flex-wrap:wrap}.pill{background:#24365b;border-radius:20px;padding:7px 12px;font-size:12px}.progress{height:5px;background:#30405b;margin:13px -22px 0}.bar{height:100%;background:var(--blue);width:0;transition:width .2s}
+main{max-width:1500px;margin:auto;padding:22px;display:grid;grid-template-columns:minmax(360px,1.08fr) minmax(400px,1fr);gap:20px;align-items:start}
+.card{background:var(--card);border:1px solid #e4e8ef;border-radius:15px;padding:17px;box-shadow:0 1px 2px #10182808;margin-bottom:12px}.card h2{font-size:14px;margin:0 0 12px;font-weight:750}.imagehead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.id{font-family:ui-monospace,monospace;background:#f2f4f7;border-radius:6px;padding:4px 8px;color:#344054}
+.viewer{background:#050505;border-radius:10px;min-height:440px;height:min(68vh,680px);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.viewer img{max-width:100%;max-height:100%;object-fit:contain;display:block}.empty{color:#aeb8c8;text-align:center;padding:30px;max-width:400px}.empty strong{display:block;color:white;font-size:17px;margin-bottom:8px}.viewtools{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:6px}.viewtools button{background:#202020d9;color:white;border:0;border-radius:7px;width:36px;height:36px;font-size:17px;cursor:pointer}.caption{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:12px;margin-top:12px;flex-wrap:wrap}
+label{display:block;font-weight:600;margin-bottom:7px}.field{margin-bottom:13px}.choices{display:flex;gap:7px;flex-wrap:wrap}.choice{border:1px solid #d0d5dd;background:#fff;border-radius:9px;padding:8px 12px;cursor:pointer;font:inherit;color:var(--ink)}.choice.selected{border-color:var(--blue);background:#eaf2ff;color:#2058a5;font-weight:700;box-shadow:0 0 0 1px #347fe822}.small .choice{padding:5px 10px;min-width:37px}.checks{display:grid;grid-template-columns:1fr 1fr;gap:8px 15px}.checks label{font-weight:450;margin:0;display:flex;align-items:center;gap:8px;cursor:pointer}.checks input{accent-color:var(--blue);width:17px;height:17px}.quality-row{display:grid;grid-template-columns:minmax(150px,1fr) auto;gap:12px;align-items:center;margin:8px 0}.quality-row .choices{gap:5px}.quality-row .choice{min-width:29px;padding:3px 0;text-align:center;border-radius:50%;font-size:12px}
+input[type=text],select{border:1px solid #d0d5dd;border-radius:8px;padding:9px 10px;font:inherit;background:white;max-width:100%}.top-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.top-controls select{min-width:165px}.btn{border:1px solid #cfd6e2;background:white;color:#263347;padding:9px 13px;border-radius:9px;font:inherit;font-weight:650;cursor:pointer}.btn.primary{background:var(--blue);border-color:var(--blue);color:white}.btn:disabled{opacity:.4;cursor:not-allowed}.actions{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:12px}.status{color:var(--muted);font-size:12px}.note{font-size:12px;color:var(--muted);margin-top:8px}.toplabel{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.toplabel label{margin:0}
+@media(max-width:900px){main{grid-template-columns:1fr;padding:12px}.viewer{height:55vh;min-height:300px}header{padding-left:14px;padding-right:14px}.progress{margin-left:-14px;margin-right:-14px}.checks{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.checks{grid-template-columns:1fr}.quality-row{grid-template-columns:1fr;gap:5px}.viewer{min-height:260px}.card{padding:13px}}
+</style>
+</head>
+<body>
+<header><div class="top"><div><div class="brand">Research Image Labeler</div><div class="sub">Independent annotation workspace · labels saved per annotator on this browser</div></div>
+<div class="meta"><span class="pill" id="raterPill">Annotator: not selected</span><span class="pill" id="countPill">Image 0 / 0</span><span class="pill" id="savedPill">Not saved yet</span></div></div><div class="progress"><div class="bar" id="progress"></div></div></header>
+<main>
+<section class="card">
+<div class="imagehead"><h2>Image viewer</h2><span class="id" id="imageId">No image</span></div>
+<div class="viewer" id="viewer"></div>
+<div class="caption"><span>Use Back and Next to annotate the two research images.</span><span id="filename"></span></div>
+<div class="actions"><span></span><button class="btn" id="exportBtn" disabled>Export labels (JSON)</button></div>
+</section>
+<section>
+<div class="card">
+<h2>Annotation session</h2>
+<div class="field"><label for="rater">Who is annotating?</label><div class="top-controls"><select id="rater"><option value="">Select annotator…</option><option value="Annotator A">Annotator A</option><option value="Annotator B">Annotator B</option></select><button class="btn" id="renameBtn">Edit names</button></div><div class="note">Each annotator has a separate set of labels on this browser. Choose your name before annotating.</div></div>
+<div class="field"><label>1. Is this image real or synthetic?</label><div class="choices" data-field="imageType"><button class="choice" data-value="Real">Real</button><button class="choice" data-value="Synthetic">Synthetic</button><button class="choice" data-value="Uncertain">Uncertain</button></div><div class="note">Confidence (1 = guessing, 5 = certain)</div><div class="choices small" data-field="confidence"><button class="choice" data-value="1">1</button><button class="choice" data-value="2">2</button><button class="choice" data-value="3">3</button><button class="choice" data-value="4">4</button><button class="choice" data-value="5">5</button></div></div>
+</div>
+<div class="card"><h2>2. DR grade (ICDR)</h2><div class="choices" data-field="drGrade"><button class="choice" data-value="0 - No DR">0 · No DR</button><button class="choice" data-value="1 - Mild">1 · Mild</button><button class="choice" data-value="2 - Moderate">2 · Moderate</button><button class="choice" data-value="3 - Severe NPDR">3 · Severe NPDR</button><button class="choice" data-value="4 - Proliferative">4 · Proliferative</button><button class="choice" data-value="Ungradable">Ungradable</button></div></div>
+<div class="card"><h2>3. Lesions visible (select all that apply)</h2><div class="checks" id="lesions">
+<label><input type="checkbox" value="Microaneurysms">Microaneurysms</label><label><input type="checkbox" value="Venous beading">Venous beading</label>
+<label><input type="checkbox" value="Dot/blot hemorrhages">Dot/blot hemorrhages</label><label><input type="checkbox" value="IRMA">IRMA</label>
+<label><input type="checkbox" value="Hard exudates">Hard exudates</label><label><input type="checkbox" value="Neovascularization (NVD/NVE)">Neovascularization (NVD/NVE)</label>
+<label><input type="checkbox" value="Cotton-wool spots">Cotton-wool spots</label><label><input type="checkbox" value="Preretinal / vitreous hemorrhage">Preretinal / vitreous hemorrhage</label>
+</div></div>
+<div class="card"><h2>4. Image quality (1 = poor, 5 = excellent)</h2><div id="quality"></div></div>
+<div class="card"><h2>5. Additional notes</h2><textarea id="notes" rows="3" style="width:100%;border:1px solid #d0d5dd;border-radius:8px;padding:10px;font:inherit" placeholder="Optional observations, ambiguity, or reason ungradable…"></textarea></div>
+<div class="actions"><button class="btn" id="prevBtn" disabled>← Back</button><span class="status" id="status">Select an annotator to begin.</span><button class="btn primary" id="nextBtn" disabled>Save & next →</button></div>
+<div class="actions"><button class="btn" id="skipBtn" disabled>Skip to next →</button><button class="btn" id="clearBtn" disabled>Clear this image's labels</button></div>
+</section>
+</main>
+<script>
+const qualityFields=['Optic disc appearance','Vessel continuity & branching','Macula / fovea plausibility','Free of artifacts','Usable for training / teaching?'];
+const state={files:[
+  {name:'1',src:'1.jpeg'},
+  {name:'2',src:'2.jpeg'}
+],index:0,rater:'',annotations:{},zoom:1,names:['Annotator A','Annotator B']};
+const $=id=>document.getElementById(id);
+const key=(r,i)=>`${r}::${state.files[i]?.name||i}`;
+function buildQuality(){ $('quality').innerHTML=qualityFields.map((q,i)=>`<div class="quality-row"><span>${q}</span><div class="choices small" data-quality="${i}">${[1,2,3,4,5].map(n=>`<button class="choice" data-value="${n}">${n}</button>`).join('')}</div></div>`).join(''); }
+buildQuality();
+function currentKey(){return state.rater&&state.files.length?key(state.rater,state.index):null}
+function blank(){return {imageType:'',confidence:'',drGrade:'',lesions:[],quality:{},notes:''}}
+function getAnn(){const k=currentKey();if(!k)return blank();return state.annotations[k]||blank()}
+function saveCurrent(){const k=currentKey();if(!k)return;const a={imageType:document.querySelector('[data-field="imageType"] .selected')?.dataset.value||'',confidence:document.querySelector('[data-field="confidence"] .selected')?.dataset.value||'',drGrade:document.querySelector('[data-field="drGrade"] .selected')?.dataset.value||'',lesions:[...document.querySelectorAll('#lesions input:checked')].map(x=>x.value),quality:{},notes:$('notes').value};document.querySelectorAll('[data-quality]').forEach(el=>{const v=el.querySelector('.selected')?.dataset.value;if(v)a.quality[el.dataset.quality]=Number(v)});state.annotations[k]=a;localStorage.setItem('researchImageLabeler_v1',JSON.stringify({annotations:state.annotations,names:state.names}));$('savedPill').textContent='Saved locally';updateStatus()}
+function paintChoices(field,value){document.querySelectorAll(`[data-field="${field}"] .choice`).forEach(b=>b.classList.toggle('selected',b.dataset.value===String(value||'')))}
+function renderForm(){const a=getAnn();paintChoices('imageType',a.imageType);paintChoices('confidence',a.confidence);paintChoices('drGrade',a.drGrade);document.querySelectorAll('#lesions input').forEach(x=>x.checked=a.lesions.includes(x.value));document.querySelectorAll('[data-quality]').forEach(el=>el.querySelectorAll('.choice').forEach(b=>b.classList.toggle('selected',String(a.quality[el.dataset.quality]||'')===b.dataset.value)));$('notes').value=a.notes||''}
+function renderImage(){const f=state.files[state.index];$('viewer').innerHTML='';state.zoom=1;if(f){const img=document.createElement('img');img.alt=f.name;img.src=f.src;img.style.transform='scale(1)';$('viewer').appendChild(img);const tools=document.createElement('div');tools.className='viewtools';tools.innerHTML='<button title="Zoom in">+</button><button title="Zoom out">−</button><button title="Fit image">↗</button>';const bs=tools.querySelectorAll('button');bs[0].onclick=()=>zoom(1.2);bs[1].onclick=()=>zoom(.83);bs[2].onclick=()=>{state.zoom=1;img.style.transform='scale(1)'};$('viewer').appendChild(tools);$('imageId').textContent=`ID: ${f.name}`;$('filename').textContent=f.name}updateHeader();renderForm();updateStatus()}
+function zoom(mult){const img=$('viewer').querySelector('img');if(!img)return;state.zoom=Math.max(.5,Math.min(4,state.zoom*mult));img.style.transform=`scale(${state.zoom})`}
+function updateHeader(){const n=state.files.length;$('countPill').textContent=n?`Image ${state.index+1} / ${n}`:'Image 0 / 0';$('progress').style.width=n?`${(state.index+1)/n*100}%`:'0%';$('raterPill').textContent='Annotator: '+(state.rater||'not selected');$('prevBtn').disabled=!n||state.index===0;$('nextBtn').disabled=!n||!state.rater;$('skipBtn').disabled=!n||!state.rater;$('clearBtn').disabled=!n||!state.rater;$('exportBtn').disabled=!state.rater||!n}
+function updateStatus(){if(!state.rater){$('status').textContent='Select an annotator to begin.';return}const a=getAnn();const filled=Object.values(a).some(v=>Array.isArray(v)?v.length:typeof v==='object'&&v!==null?Object.keys(v).length>0:String(v).length>0);$('status').textContent=filled?'Labels available · auto-saves on this browser':'Not labeled yet'}
+document.querySelectorAll('[data-field]').forEach(group=>group.addEventListener('click',e=>{const b=e.target.closest('.choice');if(!b)return;group.querySelectorAll('.choice').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');saveCurrent()}));
+$('quality').addEventListener('click',e=>{const b=e.target.closest('.choice');if(!b)return;const g=b.closest('[data-quality]');g.querySelectorAll('.choice').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');saveCurrent()});
+$('lesions').addEventListener('change',saveCurrent);$('notes').addEventListener('input',saveCurrent);
+$('rater').onchange=e=>{saveCurrent();state.rater=e.target.value;renderImage();updateHeader();};
+$('prevBtn').onclick=()=>{saveCurrent();if(state.index>0){state.index--;renderImage()}};
+$('nextBtn').onclick=()=>{saveCurrent();if(state.index<state.files.length-1){state.index++;renderImage()}else{$('status').textContent='You are at the final image. Export labels when finished.'}};
+$('skipBtn').onclick=()=>{if(state.index<state.files.length-1){state.index++;renderImage()}};
+$('clearBtn').onclick=()=>{if(!confirm('Clear all labels for this image and annotator?'))return;delete state.annotations[currentKey()];localStorage.setItem('researchImageLabeler_v1',JSON.stringify({annotations:state.annotations,names:state.names}));renderForm();updateStatus()};
+$('exportBtn').onclick=()=>{saveCurrent();const out={project:'Research Image Labeler',annotator:state.rater,exportedAt:new Date().toISOString(),annotations:state.files.map((f,i)=>({image:f.name,...(state.annotations[key(state.rater,i)]||blank())}))};const blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`labels_${state.rater.replaceAll(' ','_')}.json`;a.click();URL.revokeObjectURL(a.href)};
+$('renameBtn').onclick=()=>{const a=prompt('Name for Annotator A:',state.names[0]);if(a===null)return;const b=prompt('Name for Annotator B:',state.names[1]);if(b===null)return;state.names=[a.trim()||'Annotator A',b.trim()||'Annotator B'];const old=$('rater').value;const select=$('rater');select.innerHTML='<option value="">Select annotator…</option>'+state.names.map(n=>`<option value="${n.replaceAll('"','&quot;')}">${n.replaceAll('<','&lt;')}</option>`).join('');state.rater=old;select.value=old;updateHeader();renderImage()};
+try{const saved=JSON.parse(localStorage.getItem('researchImageLabeler_v1')||'{}');state.annotations=saved.annotations||{};if(saved.names)state.names=saved.names;const s=$('rater');s.innerHTML='<option value="">Select annotator…</option>'+state.names.map(n=>`<option value="${n}">${n}</option>`).join('')}catch(e){}
+renderImage();
+</script>
+</body></html>
